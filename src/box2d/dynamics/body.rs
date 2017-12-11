@@ -107,7 +107,7 @@ extern {
     fn b2Body_GetAngle(this: *mut B2Body) -> Float32;
     fn b2Body_GetFixtureList(this: *mut B2Body) -> *mut B2Fixture;
     fn b2Body_GetNext(this: *mut B2Body) -> *mut B2Body;
-    fn b2Body_GetPosition(this: *mut B2Body) -> &Vec2;
+    fn b2Body_GetPosition(this: *mut B2Body) -> &'static Vec2;
     fn b2Body_GetUserData(this: *const B2Body) -> usize;
     fn b2Body_GetWorld(this: *const B2Body) -> *mut B2World;
     fn b2Body_GetLocalPoint(this: *const B2Body, worldPoint: &Vec2) -> Vec2;
