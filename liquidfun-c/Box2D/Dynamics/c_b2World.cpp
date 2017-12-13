@@ -37,6 +37,10 @@ extern "C" {
     	return self->CreateBody(bd);
     }
 
+    void b2World_DestroyBody(b2World* self, b2Body* bd) {
+        return self->DestroyBody(bd);
+    }
+
     b2RevoluteJoint* b2World_CreateRevoluteJoint(
         b2World* self,
 
