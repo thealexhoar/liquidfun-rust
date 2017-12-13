@@ -117,7 +117,7 @@ extern {
 #[allow(raw_pointer_derive)]
 #[derive(Clone, Debug)]
 pub struct Body {
-	pub ptr: *mut B2Body
+	pub masked_ptr: usize
 }
 
 impl Body {
@@ -131,7 +131,7 @@ impl Body {
     /// @warning This function is locked during callbacks.
     pub fn create_fixture(&self, def: &FixtureDef) -> Fixture {
         unsafe {
-            Fixture { ptr: b2Body_CreateFixture(self.ptr, transmute(def)) }
+            Fixture { masked_ptr: b2Body_CreateFixture(self.get_ptr(), transmute(def)) as usize }
         }
     }
 
@@ -144,7 +144,7 @@ impl Body {
     /// @warning This function is locked during callbacks.
     pub fn create_fixture_from_shape(&self, shape: &Shape, density: f32) -> Fixture {
         unsafe {
-            Fixture { ptr: b2Body_CreateFixture_FromShape(self.ptr, shape.handle(), density) }
+            Fixture { masked_ptr: b2Body_CreateFixture_FromShape(self.get_ptr(), shape.handle(), density) as usize }
         }
     }
 
@@ -152,7 +152,7 @@ impl Body {
     /// @return the current world rotation angle in radians.
     pub fn get_angle(&self) -> f32 {
         unsafe {
-            b2Body_GetAngle(self.ptr)
+            b2Body_GetAngle(self.get_ptr())
         }
     }
 
@@ -160,13 +160,13 @@ impl Body {
     pub fn get_fixture_list(&self) -> Option<Fixture> {
         let ptr;
         unsafe {
-            ptr = b2Body_GetFixtureList(self.ptr);
+            ptr = b2Body_GetFixtureList(self.get_ptr());
         }
 
         if ptr.is_null() {
             None
         } else {
-            Some(Fixture { ptr: ptr })
+            Some(Fixture { masked_ptr: ptr as usize })
         }
     }    
 
@@ -175,13 +175,13 @@ impl Body {
         let ptr: *mut B2Body;
         
         unsafe {
-            ptr = b2Body_GetNext(self.ptr);
+            ptr = b2Body_GetNext(self.get_ptr());
         }
 
         if ptr.is_null() {
             None
         } else {
-            Some(Body { ptr: ptr })
+            Some(Body { masked_ptr: ptr as usize })
         }        
     }
 
@@ -189,28 +189,32 @@ impl Body {
     /// @return the world position of the body's origin.
     pub fn get_position(&self) -> &Vec2 {
         unsafe {
-            b2Body_GetPosition(self.ptr)
+            b2Body_GetPosition(self.get_ptr())
         }
     }
 
     /// Get the user data pointer that was provided in the body definition.
     pub fn get_user_data(&self) -> usize {
         unsafe {
-            b2Body_GetUserData(self.ptr)
+            b2Body_GetUserData(self.get_ptr())
         }
     }
 
     /// Get the parent world of this body.
     pub fn get_world(&self) -> World {
         unsafe {
-            World { ptr: b2Body_GetWorld(self.ptr) }
+            World { ptr: b2Body_GetWorld(self.get_ptr()) }
         }
     }
 
     pub fn get_local_point(&self, world_point: &Vec2) -> Vec2 {
         unsafe {
-            b2Body_GetLocalPoint(self.ptr, world_point)
+            b2Body_GetLocalPoint(self.get_ptr(), world_point)
         }
+    }
+
+    pub fn get_ptr(&self) -> *mut B2Body {
+        self.masked_ptr as *mut B2Body
     }
 
 }

@@ -85,9 +85,9 @@ extern {
 /// Fixtures are created via b2Body::CreateFixture.
 /// @warning you cannot reuse fixtures.
 #[allow(raw_pointer_derive)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Fixture {
-    pub ptr: *mut B2Fixture
+    pub masked_ptr: usize
 }
 
 impl Fixture {
@@ -96,7 +96,7 @@ impl Fixture {
     /// @return the shape type.
     pub fn get_type(&self) -> shape::Type {
         unsafe {
-            b2Fixture_GetType(self.ptr)
+            b2Fixture_GetType(self.get_ptr())
         }
     }
 
@@ -105,7 +105,7 @@ impl Fixture {
     /// Manipulating the shape may lead to non-physical behavior.
     pub fn get_shape(&self) -> *mut shape::B2Shape {
         unsafe {
-            return b2Fixture_GetShape(self.ptr);
+            return b2Fixture_GetShape(self.get_ptr());
         }
     }    
 
@@ -115,14 +115,18 @@ impl Fixture {
         let ptr: *mut B2Fixture;
         
         unsafe {
-            ptr = b2Fixture_GetNext(self.ptr);
+            ptr = b2Fixture_GetNext(self.get_ptr());
         }
 
         if ptr.is_null() {
             None
         } else {
-            Some(Fixture { ptr: ptr })
+            Some(Fixture { masked_ptr: ptr as usize })
         }        
+    }
+
+    pub fn get_ptr(&self) -> *mut B2Fixture {
+        self.masked_ptr as *mut B2Fixture
     }
 
 }

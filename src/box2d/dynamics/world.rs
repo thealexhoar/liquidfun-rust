@@ -6,11 +6,13 @@ use super::super::common::settings::*;
 use super::super::particle::particle_system::*;
 use super::joints;
 
+use std::collections::HashMap;
+
 pub enum B2World {}
 
 extern {
     fn b2World_CreateBody(world: *mut B2World, bd: *const BodyDef) -> *mut B2Body;
-    fn b2World_DestroyBody(world: *mut B2World, bd: *const BodyDef);
+    fn b2World_DestroyBody(world: *mut B2World, bd: *const B2Body);
     fn b2World_CreateParticleSystem(world: *mut B2World, def: *const ParticleSystemDef) -> *mut B2ParticleSystem;
     fn b2World_Delete(world: *mut B2World);
     fn b2World_GetBodyCount(world: *const B2World) -> Int32;
@@ -47,7 +49,7 @@ extern {
 /// and asynchronous queries. The world also contains efficient memory
 /// management facilities.
 pub struct World {
-	pub ptr: *mut B2World
+	pub ptr: *mut B2World,
 }
 
 impl World {
@@ -65,13 +67,13 @@ impl World {
     /// @warning This function is locked during callbacks.
     pub fn create_body(&mut self, def: &BodyDef) -> Body {
         unsafe {
-            Body { ptr: b2World_CreateBody(self.ptr, def) }
+            Body { masked_ptr: b2World_CreateBody(self.ptr, def) as usize }
         }
     }
 
-    pub fn b2World_DestroyBody(world: *mut B2World, bd: *const BodyDef) {
+    pub fn destroy_body(&mut self, body: Body) {
         unsafe {
-            b2World_DestroyBody(world, bd);
+            b2World_DestroyBody(self.ptr, body.get_ptr());
         }
     }
 
@@ -85,11 +87,11 @@ impl World {
                 def.0.joint_type,
                 def.0.user_data,
                 match def.0.body_a {
-                    Some(ref b) =>b.ptr,
+                    Some(ref b) => b.get_ptr(),
                     None => ptr::null_mut()
                 },
                 match def.0.body_b {
-                    Some(ref b) =>b.ptr,
+                    Some(ref b) => b.get_ptr(),
                     None => ptr::null_mut()
                 },
                 def.0.collide_connected,
@@ -141,7 +143,7 @@ impl World {
         if ptr.is_null() {
             None
         } else {
-            Some(Body { ptr: ptr })
+            Some(Body { masked_ptr: ptr as usize })
         }
     }
 
